@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -e
+ROOTPATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+cd "$ROOTPATH"
+
+[ "$1" != "--force" ] || FORCE_INSTALL=1
+
+if [ ! -f "$GOPATH/bin/golangci-lint" ] || [ -n "$FORCE_INSTALL" ]; then
+  if [ -n "$CI_ENV" ]; then
+    curl -L -o /tmp/golangci-lint.tar.gz https://github.com/golangci/golangci-lint/releases/download/v1.4/golangci-lint-1.4-linux-amd64.tar.gz
+    tar -xzf /tmp/golangci-lint.tar.gz -C "$GOPATH/bin" --strip-components=1 golangci-lint-1.4-linux-amd64/golangci-lint
+  else
+    go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+  fi
+fi

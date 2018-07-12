@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -e
+ROOTPATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+. "$ROOTPATH/script/build-common"
+
+GOARCHLIST="amd64 386" 
+GOOSLIST="linux windows darwin"
+BUILDFILE="$ROOTPATH/main.go"
+if [ "$1" == "releases" ]; then
+    for os in $GOOSLIST; do
+        for arch in $GOARCHLIST; do
+            GOOS=$os GOARCH=$arch go build -o "$BIN/goctobox_${os}_${arch}" $BUILDFILE
+        done
+    done
+else
+    go build -o "$BIN/goctobox" $BUILDFILE
+fi
