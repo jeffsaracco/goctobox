@@ -2,8 +2,12 @@ package octobox
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
 )
 
 type (
@@ -53,7 +57,7 @@ func New(instanceAddr, token string) *Client {
 }
 
 //GetNotifications returns a list of the notifications
-func (c *Client) GetNotifications() *[]Notification {
+func (c *Client) GetNotifications() []*Notification {
 	req, _ := http.NewRequest("GET", c.InstanceAddr+"/notifications.json", nil)
 	req.Header.Add("Authorization", "Bearer "+c.APIToken)
 	rs, _ := http.DefaultClient.Do(req)
@@ -76,5 +80,28 @@ func (c *Client) GetNotifications() *[]Notification {
 		panic(err)
 	}
 
-	return &data.Notifications
+	var notifications []*Notification
+
+	for i := range data.Notifications {
+		notifications = append(notifications, &data.Notifications[i])
+	}
+
+	return notifications
+}
+
+//MarkAsRead marks a notification as read
+func (c *Client) MarkAsRead(n *Notification) {
+	postURL := fmt.Sprintf("%s/notifications/mark_read_selected.json", c.InstanceAddr)
+	form := url.Values{}
+	form.Add("id[]", strconv.Itoa(n.ID))
+	req, _ := http.NewRequest("POST", postURL, strings.NewReader(form.Encode()))
+	req.PostForm = form
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Authorization", "Bearer "+c.APIToken)
+	rs, err := http.DefaultClient.Do(req)
+	if err != nil || rs.StatusCode != 204 {
+		fmt.Println(rs.StatusCode)
+		panic(err) // More idiomatic way would be to print the error and die unless it's a serious error
+	}
+	defer rs.Body.Close()
 }

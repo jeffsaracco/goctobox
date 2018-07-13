@@ -2,19 +2,21 @@ package main
 
 import (
 	"os"
+	"os/exec"
 
 	"github.com/gdamore/tcell"
 	"github.com/jeffsaracco/goctobox/octobox"
 	"github.com/rivo/tview"
 )
 
-var notifications *[]octobox.Notification
+var notifications []*octobox.Notification
 
 func main() {
 	app := tview.NewApplication()
 	table := tview.NewTable().SetBorders(true)
+	octoboxURL := os.Getenv("OCTOBOX_URL")
 	apiToken := os.Getenv("OCTOBOX_API_TOKEN")
-	octoboxClient := octobox.New("https://octobox.githubapp.com", apiToken)
+	octoboxClient := octobox.New(octoboxURL, apiToken)
 
 	fillTable(octoboxClient, table)
 	table.SetSelectable(true, false)
@@ -27,6 +29,21 @@ func main() {
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyCtrlR {
 			fillTable(octoboxClient, table)
+		} else if event.Key() == tcell.KeyCtrlO {
+			row, _ := table.GetSelection()
+			if row > 0 {
+				notif := notifByIndex(row - 1)
+				url := notif.WebURL
+				cmd := exec.Command("open", url)
+				cmd.Run()
+			}
+		} else if event.Key() == tcell.KeyCtrlN {
+			row, _ := table.GetSelection()
+			if row > 0 {
+				notif := notifByIndex(row - 1)
+				octoboxClient.MarkAsRead(notif)
+				fillTable(octoboxClient, table)
+			}
 		}
 		return event
 	})
@@ -37,18 +54,27 @@ func main() {
 
 }
 
+func notifByIndex(index int) *octobox.Notification {
+	if index >= 0 {
+		return notifications[index]
+	}
+	return nil
+}
+
 func fillTable(octoboxClient *octobox.Client, table *tview.Table) {
 	table.Clear()
 	notifications = octoboxClient.GetNotifications()
 
-	cols, rows := 4, len(*notifications)
+	cols, rows := 4, len(notifications)
 
 	for r := 0; r < rows; r++ {
 		setTitleRow(table)
 
 		for c := 0; c < cols; c++ {
-			notification := (*notifications)[r]
-			setNotificationRow(table, notification, r+1, c)
+			notification := notifByIndex(r)
+			if notification != nil {
+				setNotificationRow(table, notification, r+1, c)
+			}
 		}
 	}
 }
@@ -62,13 +88,13 @@ func contains(s []int, e int) (int, bool) {
 	return -1, false
 }
 
-func handleSelection(table *tview.Table, notifications *[]octobox.Notification) func(int, int) {
+func handleSelection(table *tview.Table, notifications []*octobox.Notification) func(int, int) {
 	selected := []int{}
 	return func(row int, column int) {
 		if row == 0 {
 			return
 		}
-		notif := (*notifications)[row-1]
+		notif := notifByIndex(row - 1)
 		cols := table.GetColumnCount()
 		color := tcell.ColorRed
 
@@ -77,6 +103,9 @@ func handleSelection(table *tview.Table, notifications *[]octobox.Notification) 
 			selected[len(selected)-1] = 0
 			selected = selected[:len(selected)-1]
 			color = tcell.ColorWhite
+			if notif.Unread {
+				color = tcell.ColorGreen
+			}
 		} else {
 			selected = append(selected, notif.ID)
 		}
@@ -87,7 +116,7 @@ func handleSelection(table *tview.Table, notifications *[]octobox.Notification) 
 	}
 }
 
-func getColumnData(notification octobox.Notification, column int) string {
+func getColumnData(notification *octobox.Notification, column int) string {
 	switch column {
 	case 0:
 		return notification.Subject.Type
@@ -114,7 +143,7 @@ func setTitleRow(table *tview.Table) {
 	}
 }
 
-func setNotificationRow(table *tview.Table, notification octobox.Notification, row, column int) {
+func setNotificationRow(table *tview.Table, notification *octobox.Notification, row, column int) {
 	color := tcell.ColorWhite
 	if notification.Unread {
 		color = tcell.ColorGreen
