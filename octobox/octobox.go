@@ -59,7 +59,7 @@ func New(instanceAddr, token string) *Client {
 //GetNotifications returns a list of the notifications
 func (c *Client) GetNotifications() []*Notification {
 	req, _ := http.NewRequest("GET", c.InstanceAddr+"/notifications.json", nil)
-	req.Header.Add("Authorization", "Bearer "+c.APIToken)
+	c.addHeadersToRequest(req)
 	rs, _ := http.DefaultClient.Do(req)
 	// if err != nil {
 	// panic(err) // More idiomatic way would be to print the error and die unless it's a serious error
@@ -91,13 +91,11 @@ func (c *Client) GetNotifications() []*Notification {
 
 //MarkAsRead marks a notification as read
 func (c *Client) MarkAsRead(n *Notification) {
-	postURL := fmt.Sprintf("%s/notifications/%d/mark_read.json", c.InstanceAddr, n.ID)
-	req, _ := http.NewRequest("POST", postURL, nil)
-	req.Header.Add("Authorization", "Bearer "+c.APIToken)
-	req.Header.Add("X-Octobox-API", "true")
+	postURL := fmt.Sprintf("%s/notifications/mark_read_selected.json", c.InstanceAddr)
+	req := c.createRequestWithIDForm(n, postURL)
+
 	rs, err := http.DefaultClient.Do(req)
 	if err != nil || rs.StatusCode != 200 {
-		fmt.Println(rs.StatusCode)
 		panic(err) // More idiomatic way would be to print the error and die unless it's a serious error
 	}
 	defer rs.Body.Close()
@@ -106,16 +104,10 @@ func (c *Client) MarkAsRead(n *Notification) {
 //MuteNotification marks a notification as read
 func (c *Client) MuteNotification(n *Notification) {
 	postURL := fmt.Sprintf("%s/notifications/mute_selected.json", c.InstanceAddr)
-	form := url.Values{}
-	form.Add("id[]", strconv.Itoa(n.ID))
-	req, _ := http.NewRequest("POST", postURL, strings.NewReader(form.Encode()))
-	req.PostForm = form
-	req.Header.Add("Authorization", "Bearer "+c.APIToken)
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("X-Octobox-API", "true")
+	req := c.createRequestWithIDForm(n, postURL)
+
 	rs, err := http.DefaultClient.Do(req)
 	if err != nil || rs.StatusCode != 200 {
-		fmt.Println(rs.StatusCode)
 		panic(err) // More idiomatic way would be to print the error and die unless it's a serious error
 	}
 	defer rs.Body.Close()
@@ -124,17 +116,27 @@ func (c *Client) MuteNotification(n *Notification) {
 //ArchiveNotification marks a notification as read
 func (c *Client) ArchiveNotification(n *Notification) {
 	postURL := fmt.Sprintf("%s/notifications/archive_selected.json", c.InstanceAddr)
-	form := url.Values{}
-	form.Add("id[]", strconv.Itoa(n.ID))
-	req, _ := http.NewRequest("POST", postURL, strings.NewReader(form.Encode()))
-	req.PostForm = form
-	req.Header.Add("Authorization", "Bearer "+c.APIToken)
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("X-Octobox-API", "true")
+	req := c.createRequestWithIDForm(n, postURL)
+
 	rs, err := http.DefaultClient.Do(req)
 	if err != nil || rs.StatusCode != 200 {
-		fmt.Println(rs.StatusCode)
 		panic(err) // More idiomatic way would be to print the error and die unless it's a serious error
 	}
 	defer rs.Body.Close()
+}
+
+func (c *Client) addHeadersToRequest(req *http.Request) {
+	req.Header.Add("Authorization", "Bearer "+c.APIToken)
+	req.Header.Add("X-Octobox-API", "true")
+}
+
+func (c *Client) createRequestWithIDForm(n *Notification, URL string) *http.Request {
+	form := url.Values{}
+	form.Add("id[]", strconv.Itoa(n.ID))
+	req, _ := http.NewRequest("POST", URL, strings.NewReader(form.Encode()))
+	req.PostForm = form
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	c.addHeadersToRequest(req)
+
+	return req
 }
