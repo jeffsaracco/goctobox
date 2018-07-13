@@ -27,7 +27,7 @@
 
 [[constraint]]
   name = "github.com/gdamore/tcell"
-  version = "1.0.0"
+  branch = "master"
 
 [[constraint]]
   branch = "master"

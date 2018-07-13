@@ -8,13 +8,13 @@
   revision = "b23993cbb6353f0e6aa98d0ee318a34728f628b9"
 
 [[projects]]
+  branch = "master"
   name = "github.com/gdamore/tcell"
   packages = [
     ".",
     "terminfo"
   ]
-  revision = "061d51a604c546b48e92253cb65190d76cecf4c6"
-  version = "v1.0.0"
+  revision = "de7e78efa4a71b3f36c7154989c529dbdf9ae623"
 
 [[projects]]
   name = "github.com/lucasb-eyer/go-colorful"
@@ -49,6 +49,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "84ed7577d3b06694e357a82583609fd8bb6203376d79e3d46dbcff4beb171d51"
+  inputs-digest = "a4f354ce17ead479f98cc033280603e2520d2d051c6f17865786d9015f014f0f"
   solver-name = "gps-cdcl"
   solver-version = 1
