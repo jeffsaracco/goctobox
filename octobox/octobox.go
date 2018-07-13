@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
-	"strconv"
-	"strings"
 )
 
 type (
@@ -91,15 +88,12 @@ func (c *Client) GetNotifications() []*Notification {
 
 //MarkAsRead marks a notification as read
 func (c *Client) MarkAsRead(n *Notification) {
-	postURL := fmt.Sprintf("%s/notifications/mark_read_selected.json", c.InstanceAddr)
-	form := url.Values{}
-	form.Add("id[]", strconv.Itoa(n.ID))
-	req, _ := http.NewRequest("POST", postURL, strings.NewReader(form.Encode()))
-	req.PostForm = form
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	postURL := fmt.Sprintf("%s/notifications/%d/mark_read.json", c.InstanceAddr, n.ID)
+	req, _ := http.NewRequest("POST", postURL, nil)
 	req.Header.Add("Authorization", "Bearer "+c.APIToken)
+	req.Header.Add("X-Octobox-API", "true")
 	rs, err := http.DefaultClient.Do(req)
-	if err != nil || rs.StatusCode != 204 {
+	if err != nil || rs.StatusCode != 200 {
 		fmt.Println(rs.StatusCode)
 		panic(err) // More idiomatic way would be to print the error and die unless it's a serious error
 	}
