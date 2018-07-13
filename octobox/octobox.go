@@ -60,7 +60,7 @@ func New(instanceAddr, token string) *Client {
 func (c *Client) GetNotifications() []*Notification {
 	req, _ := http.NewRequest("GET", c.InstanceAddr+"/notifications.json", nil)
 	c.addHeadersToRequest(req)
-	rs, _ := http.DefaultClient.Do(req)
+	rs, err := http.DefaultClient.Do(req)
 	if err != nil {
 		panic(err) // More idiomatic way would be to print the error and die unless it's a serious error
 	}
@@ -70,8 +70,6 @@ func (c *Client) GetNotifications() []*Notification {
 	if err != nil {
 		panic(err)
 	}
-
-	// fmt.Println("DATA ", c.APIToken, c.InstanceAddr, string(bodyBytes))
 
 	data := APIResponse{}
 
