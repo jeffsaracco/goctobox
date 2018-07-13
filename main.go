@@ -27,9 +27,7 @@ func main() {
 	})
 	table.SetSelectedFunc(handleSelection(table, notifications))
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyEscape {
-			app.Stop()
-		} else if event.Key() == tcell.KeyCtrlR {
+		if event.Key() == tcell.KeyCtrlR {
 			fillTable(octoboxClient, table)
 		} else if event.Key() == tcell.KeyCtrlO {
 			row, _ := table.GetSelection()
