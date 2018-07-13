@@ -27,7 +27,9 @@ func main() {
 	})
 	table.SetSelectedFunc(handleSelection(table, notifications))
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyCtrlR {
+		if event.Key() == tcell.KeyEscape {
+			app.Stop()
+		} else if event.Key() == tcell.KeyCtrlR {
 			fillTable(octoboxClient, table)
 		} else if event.Key() == tcell.KeyCtrlO {
 			row, _ := table.GetSelection()
@@ -42,6 +44,20 @@ func main() {
 			if row > 0 {
 				notif := notifByIndex(row - 1)
 				octoboxClient.MarkAsRead(notif)
+				fillTable(octoboxClient, table)
+			}
+		} else if event.Key() == tcell.KeyCtrlU {
+			row, _ := table.GetSelection()
+			if row > 0 {
+				notif := notifByIndex(row - 1)
+				octoboxClient.MuteNotification(notif)
+				fillTable(octoboxClient, table)
+			}
+		} else if event.Key() == tcell.KeyCtrlE {
+			row, _ := table.GetSelection()
+			if row > 0 {
+				notif := notifByIndex(row - 1)
+				octoboxClient.ArchiveNotification(notif)
 				fillTable(octoboxClient, table)
 			}
 		}
