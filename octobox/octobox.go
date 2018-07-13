@@ -61,9 +61,9 @@ func (c *Client) GetNotifications() []*Notification {
 	req, _ := http.NewRequest("GET", c.InstanceAddr+"/notifications.json", nil)
 	c.addHeadersToRequest(req)
 	rs, _ := http.DefaultClient.Do(req)
-	// if err != nil {
-	// panic(err) // More idiomatic way would be to print the error and die unless it's a serious error
-	// }
+	if err != nil {
+		panic(err) // More idiomatic way would be to print the error and die unless it's a serious error
+	}
 	defer rs.Body.Close()
 
 	bodyBytes, err := ioutil.ReadAll(rs.Body)
@@ -98,7 +98,6 @@ func (c *Client) MarkAsRead(n *Notification) {
 	if err != nil || rs.StatusCode != 200 {
 		panic(err) // More idiomatic way would be to print the error and die unless it's a serious error
 	}
-	defer rs.Body.Close()
 }
 
 //MuteNotification marks a notification as read
@@ -110,7 +109,6 @@ func (c *Client) MuteNotification(n *Notification) {
 	if err != nil || rs.StatusCode != 200 {
 		panic(err) // More idiomatic way would be to print the error and die unless it's a serious error
 	}
-	defer rs.Body.Close()
 }
 
 //ArchiveNotification marks a notification as read
@@ -122,7 +120,6 @@ func (c *Client) ArchiveNotification(n *Notification) {
 	if err != nil || rs.StatusCode != 200 {
 		panic(err) // More idiomatic way would be to print the error and die unless it's a serious error
 	}
-	defer rs.Body.Close()
 }
 
 func (c *Client) addHeadersToRequest(req *http.Request) {
